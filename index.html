@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-PT">
 <head>
@@ -7,6 +8,16 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css" />
+<script>
+  // TEMPORÁRIO — apanha qualquer erro e mostra-o na página,
+  // para diagnosticar sem precisar de ferramentas de programador.
+  window.onerror = function (message, source, lineno) {
+    var box = document.createElement("div");
+    box.style.cssText = "background:#E4572E;color:white;padding:1rem;font-family:monospace;white-space:pre-wrap;font-size:0.9rem;position:fixed;top:0;left:0;right:0;z-index:9999;";
+    box.textContent = "ERRO: " + message + " (linha " + lineno + ", ficheiro " + source + ")";
+    document.body.prepend(box);
+  };
+</script>
 </head>
 <body>
 
