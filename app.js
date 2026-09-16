@@ -118,39 +118,23 @@ function overlapCount(listA, listB) {
 }
 
 async function findMatches() {
-  const { data: myProfile } = await supabaseClient
-    .from("profiles")
-    .select("*")
-    .eq("id", currentUser.id)
-    .maybeSingle();
-
-  if (!myProfile) {
-    setStatus("matches-status", "Preenche primeiro o teu perfil.", true);
-    return;
-  }
-
-  const { data: others, error } = await supabaseClient
-    .from("profiles")
-    .select("*")
-    .neq("id", currentUser.id);
+  // O cálculo de compatibilidade agora corre dentro da base de dados
+  // (função find_matches, em matching_function.sql), não no browser.
+  // Isto escala para muitos milhares de perfis sem ficar lento aqui.
+  const { data, error } = await supabaseClient.rpc("find_matches", {
+    requesting_user: currentUser.id,
+  });
 
   if (error) {
     setStatus("matches-status", "Erro ao procurar: " + error.message, true);
     return;
   }
 
-  const ranked = others
-    .map((other) => {
-      const theyOfferWhatIWant = overlapCount(myProfile.seeks, other.offers);
-      const iOfferWhatTheyWant = overlapCount(other.seeks, myProfile.offers);
-      return {
-        profile: other,
-        score: theyOfferWhatIWant + iOfferWhatTheyWant,
-        mutual: theyOfferWhatIWant > 0 && iOfferWhatTheyWant > 0,
-      };
-    })
-    .filter((r) => r.score > 0)
-    .sort((a, b) => b.score - a.score);
+  const ranked = data.map((row) => ({
+    profile: row,
+    score: row.score,
+    mutual: row.mutual,
+  }));
 
   renderMatches(ranked);
 }
@@ -210,11 +194,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   // Verifica se já existe sessão ativa (ex: após refresh da página)
-  const { data } = await supabaseClient.auth.getSession();
-  if (data.session) {
-    currentUser = data.session.user;
-    await afterLogin();
-  } else {
+  try {
+    const { data, error } = await supabaseClient.auth.getSession();
+    if (error) throw error;
+    if (data.session) {
+      currentUser = data.session.user;
+      await afterLogin();
+    } else {
+      showView("view-auth");
+    }
+  } catch (e) {
+    showErrorBanner("ERRO AO INICIAR: " + e.message);
     showView("view-auth");
   }
 });
