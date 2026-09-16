@@ -3,19 +3,28 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Elo — Encontra quem procura o que ofereces</title>
+<title>Elo â€” Encontra quem procura o que ofereces</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css" />
 <script>
-  // TEMPORÁRIO — apanha qualquer erro e mostra-o na página,
+  // TEMPORÃRIO â€” apanha qualquer erro e mostra-o na pÃ¡gina,
   // para diagnosticar sem precisar de ferramentas de programador.
-  window.onerror = function (message, source, lineno) {
+  function showErrorBanner(text) {
     var box = document.createElement("div");
+    box.setAttribute("data-error-banner", "true");
     box.style.cssText = "background:#E4572E;color:white;padding:1rem;font-family:monospace;white-space:pre-wrap;font-size:0.9rem;position:fixed;top:0;left:0;right:0;z-index:9999;";
-    box.textContent = "ERRO: " + message + " (linha " + lineno + ", ficheiro " + source + ")";
+    box.textContent = text;
     document.body.prepend(box);
+  }
+  window.onerror = function (message, source, lineno) {
+    showErrorBanner("ERRO: " + message + " (linha " + lineno + ", ficheiro " + source + ")");
   };
+  window.addEventListener("unhandledrejection", function (event) {
+    var reason = event.reason;
+    var text = (reason && reason.message) ? reason.message : JSON.stringify(reason);
+    showErrorBanner("ERRO ASSÃNCRONO: " + text);
+  });
 </script>
 </head>
 <body>
@@ -32,16 +41,16 @@
 
 <main>
 
-  <!-- VISTA: Autenticação -->
+  <!-- VISTA: AutenticaÃ§Ã£o -->
   <section id="view-auth" class="view hidden">
     <h1>Entrar ou criar conta</h1>
-    <p class="subtitle">Regista-te para criares o teu perfil e encontrares correspondências.</p>
+    <p class="subtitle">Regista-te para criares o teu perfil e encontrares correspondÃªncias.</p>
 
     <label for="auth-email">Email</label>
     <input id="auth-email" type="email" placeholder="tu@exemplo.com" />
 
     <label for="auth-password">Palavra-passe</label>
-    <input id="auth-password" type="password" placeholder="mínimo 6 caracteres" />
+    <input id="auth-password" type="password" placeholder="mÃ­nimo 6 caracteres" />
 
     <button id="btn-signin" class="primary">Entrar</button>
     <button id="btn-signup" class="secondary">Criar conta nova</button>
@@ -52,29 +61,29 @@
   <!-- VISTA: Perfil -->
   <section id="view-profile" class="view hidden">
     <h1>O teu perfil</h1>
-    <p class="subtitle">Isto é o que os outros subscritores vêem — e o que o motor de correspondência usa para te ligar a eles.</p>
+    <p class="subtitle">Isto Ã© o que os outros subscritores vÃªem â€” e o que o motor de correspondÃªncia usa para te ligar a eles.</p>
 
     <label for="profile-name">Nome</label>
     <input id="profile-name" type="text" placeholder="Como te queres apresentar" />
 
     <label for="profile-bio">Sobre ti</label>
-    <textarea id="profile-bio" placeholder="Uma breve descrição"></textarea>
+    <textarea id="profile-bio" placeholder="Uma breve descriÃ§Ã£o"></textarea>
 
     <label for="profile-offers">O que ofereces</label>
-    <input id="profile-offers" type="text" placeholder="ex: aulas de matemática, contabilidade, design" />
-    <p class="hint">Separa por vírgulas. São as tuas competências, serviços ou recursos.</p>
+    <input id="profile-offers" type="text" placeholder="ex: aulas de matemÃ¡tica, contabilidade, design" />
+    <p class="hint">Separa por vÃ­rgulas. SÃ£o as tuas competÃªncias, serviÃ§os ou recursos.</p>
 
     <label for="profile-seeks">O que procuras</label>
     <input id="profile-seeks" type="text" placeholder="ex: mentoria, investimento, parceiros de projeto" />
-    <p class="hint">Separa por vírgulas. O motor de correspondência cruza isto com o que os outros oferecem.</p>
+    <p class="hint">Separa por vÃ­rgulas. O motor de correspondÃªncia cruza isto com o que os outros oferecem.</p>
 
     <button id="btn-save-profile" class="primary">Guardar perfil</button>
     <p id="profile-status" class="status"></p>
   </section>
 
-  <!-- VISTA: Correspondências -->
+  <!-- VISTA: CorrespondÃªncias -->
   <section id="view-matches" class="view hidden">
-    <h1>Correspondências</h1>
+    <h1>CorrespondÃªncias</h1>
     <p class="subtitle">Ordenadas pelo grau de compatibilidade entre o que procuras e o que os outros oferecem.</p>
     <div id="matches-list"></div>
     <p id="matches-status" class="status"></p>
@@ -82,9 +91,21 @@
 
 </main>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js"></script>
-<script src="app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="showErrorBanner('FALHA AO CARREGAR: biblioteca do Supabase (supabase-js) nÃ£o foi encontrada ou estÃ¡ bloqueada pela rede.')"></script>
+<script src="config.js" onerror="showErrorBanner('FALHA AO CARREGAR: config.js nÃ£o foi encontrado no repositÃ³rio â€” verifica se o nome do ficheiro estÃ¡ exatamente correto.')"></script>
+<script src="app.js" onerror="showErrorBanner('FALHA AO CARREGAR: app.js nÃ£o foi encontrado no repositÃ³rio â€” verifica se o nome do ficheiro estÃ¡ exatamente correto.')"></script>
+<script>
+  // Vigia: se ao fim de 4 segundos nenhuma vista estiver visÃ­vel
+  // e nenhum erro tiver sido mostrado, avisa que algo ficou preso.
+  setTimeout(function () {
+    var algumaVisivel = Array.from(document.querySelectorAll(".view")).some(
+      function (v) { return !v.classList.contains("hidden"); }
+    );
+    var jaHaErro = document.querySelector('[data-error-banner]');
+    if (!algumaVisivel && !jaHaErro) {
+      showErrorBanner("AVISO: nenhum erro foi detetado, mas nada foi mostrado no ecrÃ£. O cÃ³digo pode ter ficado bloqueado antes de chegar ao fim.");
+    }
+  }, 4000);
+</script>
 </body>
 </html>
-
