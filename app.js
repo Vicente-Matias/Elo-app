@@ -31,16 +31,16 @@ function setStatus(elementId, message, isError = false) {
 async function signUp(email, password) {
   const { data, error } = await supabaseClient.auth.signUp({ email, password });
   if (error) {
-    setStatus("auth-status", "Erro ao registar: " + error.message, true);
+    setStatus("auth-status", t("status_signup_error") + error.message, true);
     return;
   }
-  setStatus("auth-status", "Conta criada. Verifica o teu email para confirmar (se a confirma\u00e7\u00e3o estiver ativa) e depois entra.");
+  setStatus("auth-status", t("status_signup_success"));
 }
 
 async function signIn(email, password) {
   const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
   if (error) {
-    setStatus("auth-status", "Erro ao entrar: " + error.message, true);
+    setStatus("auth-status", t("status_signin_error") + error.message, true);
     return;
   }
   currentUser = data.user;
@@ -84,7 +84,7 @@ async function saveProfile() {
   const seeks = parseTags(document.getElementById("profile-seeks").value);
 
   if (!name) {
-    setStatus("profile-status", "O nome \u00e9 obrigat\u00f3rio.", true);
+    setStatus("profile-status", t("status_name_required"), true);
     return;
   }
 
@@ -97,10 +97,10 @@ async function saveProfile() {
   });
 
   if (error) {
-    setStatus("profile-status", "Erro ao guardar: " + error.message, true);
+    setStatus("profile-status", t("status_save_error") + error.message, true);
     return;
   }
-  setStatus("profile-status", "Perfil guardado com sucesso.");
+  setStatus("profile-status", t("status_save_success"));
 }
 
 // ---------- Motor de correspond\u00eancia ----------
@@ -125,7 +125,7 @@ async function findMatches() {
   });
 
   if (error) {
-    setStatus("matches-status", "Erro ao procurar: " + error.message, true);
+    setStatus("matches-status", t("status_matches_error") + error.message, true);
     return;
   }
 
@@ -143,7 +143,7 @@ function renderMatches(ranked) {
   container.innerHTML = "";
 
   if (ranked.length === 0) {
-    container.innerHTML = '<p class="empty-state">Ainda n\u00e3o h\u00e1 correspond\u00eancias. Isto acontece quando poucos perfis est\u00e3o preenchidos \u2014 convida mais pessoas ou rev\u00ea as tuas etiquetas.</p>';
+    container.innerHTML = '<p class="empty-state">' + t("matches_empty") + '</p>';
     return;
   }
 
@@ -153,14 +153,14 @@ function renderMatches(ranked) {
     card.innerHTML = `
       <div class="match-header">
         <span class="match-name">${escapeHtml(r.profile.name)}</span>
-        ${r.mutual ? '<span class="badge-mutual">correspond\u00eancia m\u00fatua</span>' : ""}
+        ${r.mutual ? '<span class="badge-mutual">' + t('matches_mutual_badge') + '</span>' : ""}
       </div>
       <p class="match-bio">${escapeHtml(r.profile.bio || "")}</p>
       <div class="match-tags">
-        <span class="tag-label">oferece:</span> ${(r.profile.offers || []).map(escapeHtml).join(", ") || "\u2014"}
+        <span class="tag-label">${t("match_offers_label")}</span> ${(r.profile.offers || []).map(escapeHtml).join(", ") || "\u2014"}
       </div>
       <div class="match-tags">
-        <span class="tag-label">procura:</span> ${(r.profile.seeks || []).map(escapeHtml).join(", ") || "\u2014"}
+        <span class="tag-label">${t("match_seeks_label")}</span> ${(r.profile.seeks || []).map(escapeHtml).join(", ") || "\u2014"}
       </div>
     `;
     container.appendChild(card);
