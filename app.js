@@ -1,12 +1,12 @@
 // ============================================================
-// APLICAÃ‡ÃƒO â€” Plataforma de CorrespondÃªncia
+// APLICA\u00c7\u00c3O \u2014 Plataforma de Correspond\u00eancia
 // ============================================================
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let currentUser = null;
 
-// ---------- UtilitÃ¡rios ----------
+// ---------- Utilit\u00e1rios ----------
 
 function parseTags(text) {
   return text
@@ -26,7 +26,7 @@ function setStatus(elementId, message, isError = false) {
   el.className = isError ? "status status-error" : "status status-ok";
 }
 
-// ---------- AutenticaÃ§Ã£o ----------
+// ---------- Autentica\u00e7\u00e3o ----------
 
 async function signUp(email, password) {
   const { data, error } = await supabaseClient.auth.signUp({ email, password });
@@ -34,7 +34,7 @@ async function signUp(email, password) {
     setStatus("auth-status", "Erro ao registar: " + error.message, true);
     return;
   }
-  setStatus("auth-status", "Conta criada. Verifica o teu email para confirmar (se a confirmaÃ§Ã£o estiver ativa) e depois entra.");
+  setStatus("auth-status", "Conta criada. Verifica o teu email para confirmar (se a confirma\u00e7\u00e3o estiver ativa) e depois entra.");
 }
 
 async function signIn(email, password) {
@@ -84,7 +84,7 @@ async function saveProfile() {
   const seeks = parseTags(document.getElementById("profile-seeks").value);
 
   if (!name) {
-    setStatus("profile-status", "O nome Ã© obrigatÃ³rio.", true);
+    setStatus("profile-status", "O nome \u00e9 obrigat\u00f3rio.", true);
     return;
   }
 
@@ -103,13 +103,13 @@ async function saveProfile() {
   setStatus("profile-status", "Perfil guardado com sucesso.");
 }
 
-// ---------- Motor de correspondÃªncia ----------
-// LÃ³gica: para cada outro subscritor, calcula-se um score de
-// compatibilidade com base na sobreposiÃ§Ã£o entre:
+// ---------- Motor de correspond\u00eancia ----------
+// L\u00f3gica: para cada outro subscritor, calcula-se um score de
+// compatibilidade com base na sobreposi\u00e7\u00e3o entre:
 //   - o que EU procuro   vs o que ELE oferece
-//   - o que ELE procura  vs o que EU ofereÃ§o
-// Uma correspondÃªncia "mÃºtua" (ambas as direÃ§Ãµes tÃªm sobreposiÃ§Ã£o)
-// tem prioridade sobre uma correspondÃªncia unidirecional.
+//   - o que ELE procura  vs o que EU ofere\u00e7o
+// Uma correspond\u00eancia "m\u00fatua" (ambas as dire\u00e7\u00f5es t\u00eam sobreposi\u00e7\u00e3o)
+// tem prioridade sobre uma correspond\u00eancia unidirecional.
 
 function overlapCount(listA, listB) {
   const setB = new Set(listB);
@@ -117,8 +117,8 @@ function overlapCount(listA, listB) {
 }
 
 async function findMatches() {
-  // O cÃ¡lculo de compatibilidade agora corre dentro da base de dados
-  // (funÃ§Ã£o find_matches, em matching_function.sql), nÃ£o no browser.
+  // O c\u00e1lculo de compatibilidade agora corre dentro da base de dados
+  // (fun\u00e7\u00e3o find_matches, em matching_function.sql), n\u00e3o no browser.
   // Isto escala para muitos milhares de perfis sem ficar lento aqui.
   const { data, error } = await supabaseClient.rpc("find_matches", {
     requesting_user: currentUser.id,
@@ -143,7 +143,7 @@ function renderMatches(ranked) {
   container.innerHTML = "";
 
   if (ranked.length === 0) {
-    container.innerHTML = '<p class="empty-state">Ainda nÃ£o hÃ¡ correspondÃªncias. Isto acontece quando poucos perfis estÃ£o preenchidos â€” convida mais pessoas ou revÃª as tuas etiquetas.</p>';
+    container.innerHTML = '<p class="empty-state">Ainda n\u00e3o h\u00e1 correspond\u00eancias. Isto acontece quando poucos perfis est\u00e3o preenchidos \u2014 convida mais pessoas ou rev\u00ea as tuas etiquetas.</p>';
     return;
   }
 
@@ -153,14 +153,14 @@ function renderMatches(ranked) {
     card.innerHTML = `
       <div class="match-header">
         <span class="match-name">${escapeHtml(r.profile.name)}</span>
-        ${r.mutual ? '<span class="badge-mutual">correspondÃªncia mÃºtua</span>' : ""}
+        ${r.mutual ? '<span class="badge-mutual">correspond\u00eancia m\u00fatua</span>' : ""}
       </div>
       <p class="match-bio">${escapeHtml(r.profile.bio || "")}</p>
       <div class="match-tags">
-        <span class="tag-label">oferece:</span> ${(r.profile.offers || []).map(escapeHtml).join(", ") || "â€”"}
+        <span class="tag-label">oferece:</span> ${(r.profile.offers || []).map(escapeHtml).join(", ") || "\u2014"}
       </div>
       <div class="match-tags">
-        <span class="tag-label">procura:</span> ${(r.profile.seeks || []).map(escapeHtml).join(", ") || "â€”"}
+        <span class="tag-label">procura:</span> ${(r.profile.seeks || []).map(escapeHtml).join(", ") || "\u2014"}
       </div>
     `;
     container.appendChild(card);
@@ -191,7 +191,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     findMatches();
   });
 
-  // Verifica se jÃ¡ existe sessÃ£o ativa (ex: apÃ³s refresh da pÃ¡gina)
+  // Verifica se j\u00e1 existe sess\u00e3o ativa (ex: ap\u00f3s refresh da p\u00e1gina)
   try {
     const { data, error } = await supabaseClient.auth.getSession();
     if (error) throw error;
