@@ -162,8 +162,15 @@ function renderMatches(ranked) {
       <div class="match-tags">
         <span class="tag-label">${t("match_seeks_label")}</span> ${(r.profile.seeks || []).map(escapeHtml).join(", ") || "\u2014"}
       </div>
+      <button class="secondary btn-message" data-partner-id="${r.profile.id}" data-partner-name="${escapeHtml(r.profile.name)}">${t("match_message_button")}</button>
     `;
     container.appendChild(card);
+  });
+
+  container.querySelectorAll(".btn-message").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      openChat(btn.getAttribute("data-partner-id"), btn.getAttribute("data-partner-name"));
+    });
   });
 }
 
@@ -171,6 +178,172 @@ function escapeHtml(str) {
   const div = document.createElement("div");
   div.textContent = str;
   return div.innerHTML;
+}
+
+// ---------- Mensagens ----------
+
+let currentChatPartnerId = null;
+let currentChatPartnerName = null;
+let realtimeChannel = null;
+
+// Guarda um cache simples de nomes de perfis, para nao ter de
+// repetir consultas a base de dados sempre que mostramos a
+// caixa de entrada.
+const profileNameCache = new Map();
+
+async function getProfileName(userId) {
+  if (profileNameCache.has(userId)) return profileNameCache.get(userId);
+  const { data } = await supabaseClient
+    .from("profiles")
+    .select("name")
+    .eq("id", userId)
+    .maybeSingle();
+  const name = (data && data.name) || userId;
+  profileNameCache.set(userId, name);
+  return name;
+}
+
+async function openInbox() {
+  const { data, error } = await supabaseClient
+    .from("messages")
+    .select("*")
+    .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    setStatus("inbox-status", t("status_matches_error") + error.message, true);
+    return;
+  }
+
+  // Agrupa as mensagens por interlocutor, guardando so a mais recente de cada.
+  const conversations = new Map();
+  for (const msg of data) {
+    const partnerId = msg.sender_id === currentUser.id ? msg.receiver_id : msg.sender_id;
+    if (!conversations.has(partnerId)) {
+      conversations.set(partnerId, msg);
+    }
+  }
+
+  const container = document.getElementById("inbox-list");
+  container.innerHTML = "";
+
+  if (conversations.size === 0) {
+    container.innerHTML = '<p class="empty-state">' + t("inbox_empty") + "</p>";
+    return;
+  }
+
+  for (const [partnerId, lastMsg] of conversations) {
+    const partnerName = await getProfileName(partnerId);
+    const item = document.createElement("div");
+    item.className = "inbox-item";
+    item.innerHTML = `
+      <div>
+        <div class="inbox-name">${escapeHtml(partnerName)}</div>
+        <div class="inbox-preview">${escapeHtml(lastMsg.content)}</div>
+      </div>
+    `;
+    item.addEventListener("click", () => openChat(partnerId, partnerName));
+    container.appendChild(item);
+  }
+}
+
+async function openChat(partnerId, partnerName) {
+  currentChatPartnerId = partnerId;
+  currentChatPartnerName = partnerName;
+  document.getElementById("chat-partner-name").textContent = partnerName;
+  showView("view-chat");
+  await loadChatMessages();
+  subscribeToChatRealtime();
+}
+
+async function loadChatMessages() {
+  const { data, error } = await supabaseClient
+    .from("messages")
+    .select("*")
+    .or(
+      `and(sender_id.eq.${currentUser.id},receiver_id.eq.${currentChatPartnerId}),and(sender_id.eq.${currentChatPartnerId},receiver_id.eq.${currentUser.id})`
+    )
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    showErrorBanner(t("status_matches_error") + error.message);
+    return;
+  }
+
+  renderChatMessages(data);
+}
+
+function renderChatMessages(messages) {
+  const container = document.getElementById("chat-messages");
+  container.innerHTML = "";
+
+  if (messages.length === 0) {
+    container.innerHTML = '<p class="empty-state">' + t("chat_empty") + "</p>";
+    return;
+  }
+
+  messages.forEach((msg) => appendChatBubble(msg));
+  container.scrollTop = container.scrollHeight;
+}
+
+function appendChatBubble(msg) {
+  const container = document.getElementById("chat-messages");
+  // Remove o estado vazio, se ainda estiver visivel.
+  const empty = container.querySelector(".empty-state");
+  if (empty) empty.remove();
+
+  const bubble = document.createElement("div");
+  const mine = msg.sender_id === currentUser.id;
+  bubble.className = "chat-bubble " + (mine ? "chat-bubble-mine" : "chat-bubble-theirs");
+  bubble.textContent = msg.content;
+  container.appendChild(bubble);
+  container.scrollTop = container.scrollHeight;
+}
+
+async function sendMessage() {
+  const input = document.getElementById("chat-input");
+  const content = input.value.trim();
+  if (!content || !currentChatPartnerId) return;
+
+  input.value = "";
+
+  const { error } = await supabaseClient.from("messages").insert({
+    sender_id: currentUser.id,
+    receiver_id: currentChatPartnerId,
+    content,
+  });
+
+  if (error) {
+    showErrorBanner(t("status_save_error") + error.message);
+  }
+  // Nao acrescentamos a bolha manualmente aqui: a subscricao em
+  // tempo real (subscribeToChatRealtime) trata disso, incluindo
+  // para o proprio remetente, o que evita mensagens duplicadas.
+}
+
+function subscribeToChatRealtime() {
+  // Fecha qualquer subscricao anterior antes de abrir uma nova,
+  // para nao acumular ligacoes em segundo plano.
+  if (realtimeChannel) {
+    supabaseClient.removeChannel(realtimeChannel);
+  }
+
+  realtimeChannel = supabaseClient
+    .channel("messages-" + currentChatPartnerId)
+    .on(
+      "postgres_changes",
+      { event: "INSERT", schema: "public", table: "messages" },
+      (payload) => {
+        const msg = payload.new;
+        const belongsToThisChat =
+          (msg.sender_id === currentUser.id && msg.receiver_id === currentChatPartnerId) ||
+          (msg.sender_id === currentChatPartnerId && msg.receiver_id === currentUser.id);
+        if (belongsToThisChat) {
+          appendChatBubble(msg);
+        }
+      }
+    )
+    .subscribe();
 }
 
 // ---------- Arranque ----------
@@ -189,6 +362,22 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("tab-matches").addEventListener("click", () => {
     showView("view-matches");
     findMatches();
+  });
+  document.getElementById("tab-messages").addEventListener("click", () => {
+    showView("view-messages");
+    openInbox();
+  });
+  document.getElementById("btn-back-inbox").addEventListener("click", () => {
+    if (realtimeChannel) {
+      supabaseClient.removeChannel(realtimeChannel);
+      realtimeChannel = null;
+    }
+    showView("view-messages");
+    openInbox();
+  });
+  document.getElementById("btn-send-message").addEventListener("click", sendMessage);
+  document.getElementById("chat-input").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") sendMessage();
   });
 
   // Verifica se j\u00e1 existe sess\u00e3o ativa (ex: ap\u00f3s refresh da p\u00e1gina)
