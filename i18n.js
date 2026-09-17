@@ -8,6 +8,7 @@ const TRANSLATIONS = {
   pt: {
     nav_profile: "O meu perfil",
     nav_matches: "Descobrir",
+    nav_messages: "Mensagens",
     nav_signout: "Sair",
 
     auth_title: "Entrar ou criar conta",
@@ -39,6 +40,16 @@ const TRANSLATIONS = {
     matches_mutual_badge: "correspond\u00eancia m\u00fatua",
     match_offers_label: "oferece:",
     match_seeks_label: "procura:",
+    match_message_button: "Enviar mensagem",
+
+    inbox_title: "Mensagens",
+    inbox_subtitle: "As tuas conversas com outros subscritores.",
+    inbox_empty: "Ainda n\u00e3o tens conversas. Envia uma mensagem a partir de uma correspond\u00eancia para come\u00e7ar.",
+
+    chat_back: "\u2190 Voltar \u00e0s mensagens",
+    chat_placeholder: "Escreve uma mensagem...",
+    chat_send: "Enviar",
+    chat_empty: "Ainda n\u00e3o h\u00e1 mensagens nesta conversa. Diz ol\u00e1!",
 
     status_signup_error: "Erro ao registar: ",
     status_signup_success: "Conta criada. Verifica o teu email para confirmar (se a confirma\u00e7\u00e3o estiver ativa) e depois entra.",
@@ -53,6 +64,7 @@ const TRANSLATIONS = {
   en: {
     nav_profile: "My profile",
     nav_matches: "Discover",
+    nav_messages: "Messages",
     nav_signout: "Sign out",
 
     auth_title: "Sign in or create an account",
@@ -84,6 +96,16 @@ const TRANSLATIONS = {
     matches_mutual_badge: "mutual match",
     match_offers_label: "offers:",
     match_seeks_label: "looking for:",
+    match_message_button: "Send message",
+
+    inbox_title: "Messages",
+    inbox_subtitle: "Your conversations with other members.",
+    inbox_empty: "No conversations yet. Send a message from a match to get started.",
+
+    chat_back: "\u2190 Back to messages",
+    chat_placeholder: "Type a message...",
+    chat_send: "Send",
+    chat_empty: "No messages in this conversation yet. Say hi!",
 
     status_signup_error: "Sign-up error: ",
     status_signup_success: "Account created. Check your email to confirm it (if confirmation is enabled), then sign in.",
