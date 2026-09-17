@@ -33,6 +33,22 @@ header {
   border-bottom: 1px solid var(--border);
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+#lang-switch {
+  background: #24262C;
+  border: 1px solid var(--border);
+  color: var(--paper);
+  border-radius: 6px;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.85rem;
+  font-family: inherit;
+}
+
 nav button {
   background: none;
   border: none;
