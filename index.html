@@ -39,6 +39,7 @@
     <nav id="nav-logged" class="hidden">
       <button id="tab-profile" data-i18n="nav_profile"></button>
       <button id="tab-matches" data-i18n="nav_matches"></button>
+      <button id="tab-messages" data-i18n="nav_messages"></button>
       <button id="btn-signout" data-i18n="nav_signout"></button>
     </nav>
     <nav id="nav-logged-out"></nav>
@@ -93,6 +94,25 @@
     <p class="subtitle" data-i18n="matches_subtitle"></p>
     <div id="matches-list"></div>
     <p id="matches-status" class="status"></p>
+  </section>
+
+  <!-- VISTA: Caixa de entrada -->
+  <section id="view-messages" class="view hidden">
+    <h1 data-i18n="inbox_title"></h1>
+    <p class="subtitle" data-i18n="inbox_subtitle"></p>
+    <div id="inbox-list"></div>
+    <p id="inbox-status" class="status"></p>
+  </section>
+
+  <!-- VISTA: Conversa -->
+  <section id="view-chat" class="view hidden">
+    <button id="btn-back-inbox" class="secondary" data-i18n="chat_back"></button>
+    <h1 id="chat-partner-name"></h1>
+    <div id="chat-messages"></div>
+    <div class="chat-input-row">
+      <input id="chat-input" type="text" data-i18n-placeholder="chat_placeholder" />
+      <button id="btn-send-message" class="primary" data-i18n="chat_send"></button>
+    </div>
   </section>
 
 </main>
