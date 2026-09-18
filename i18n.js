@@ -16,7 +16,7 @@ const TRANSLATIONS = {
     auth_email_label: "Email",
     auth_email_placeholder: "tu@exemplo.com",
     auth_password_label: "Palavra-passe",
-    auth_password_placeholder: "m\u00ednimo 6 caracteres",
+    auth_password_placeholder: "m\u00ednimo 8 caracteres, com mai\u00fascula, min\u00fascula e n\u00famero",
     auth_signin: "Entrar",
     auth_signup: "Criar conta nova",
 
@@ -52,6 +52,8 @@ const TRANSLATIONS = {
     chat_empty: "Ainda n\u00e3o h\u00e1 mensagens nesta conversa. Diz ol\u00e1!",
 
     status_signup_error: "Erro ao registar: ",
+    status_password_weak: "A password tem de ter pelo menos 8 caracteres, incluindo uma mai\u00fascula, uma min\u00fascula e um n\u00famero.",
+    status_captcha_required: "Confirma que n\u00e3o \u00e9s um rob\u00f4 no quadrado acima antes de continuar.",
     status_signup_success: "Conta criada. Verifica o teu email para confirmar (se a confirma\u00e7\u00e3o estiver ativa) e depois entra.",
     status_signin_error: "Erro ao entrar: ",
     status_name_required: "O nome \u00e9 obrigat\u00f3rio.",
@@ -72,7 +74,7 @@ const TRANSLATIONS = {
     auth_email_label: "Email",
     auth_email_placeholder: "you@example.com",
     auth_password_label: "Password",
-    auth_password_placeholder: "minimum 6 characters",
+    auth_password_placeholder: "minimum 8 characters, with uppercase, lowercase and a number",
     auth_signin: "Sign in",
     auth_signup: "Create new account",
 
@@ -108,6 +110,8 @@ const TRANSLATIONS = {
     chat_empty: "No messages in this conversation yet. Say hi!",
 
     status_signup_error: "Sign-up error: ",
+    status_password_weak: "Password must be at least 8 characters, including one uppercase letter, one lowercase letter and one number.",
+    status_captcha_required: "Please confirm you're not a robot in the box above before continuing.",
     status_signup_success: "Account created. Check your email to confirm it (if confirmation is enabled), then sign in.",
     status_signin_error: "Sign-in error: ",
     status_name_required: "Name is required.",
