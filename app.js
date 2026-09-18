@@ -28,8 +28,54 @@ function setStatus(elementId, message, isError = false) {
 
 // ---------- Autentica\u00e7\u00e3o ----------
 
+// Exige pelo menos 8 caracteres, uma maiuscula, uma minuscula e um numero.
+// Isto corre no browser antes de contactar o Supabase, para dar feedback
+// imediato -- mas a validacao real (que nao pode ser contornada) e sempre
+// a que o Supabase aplica do lado do servidor.
+function isPasswordStrong(password) {
+  return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(password);
+}
+
+// ---------- CAPTCHA (Cloudflare Turnstile) ----------
+
+let turnstileToken = null;
+let turnstileWidgetId = null;
+
+function renderTurnstileWidget() {
+  if (!window.turnstile || turnstileWidgetId !== null) return;
+  turnstileWidgetId = turnstile.render("#turnstile-widget", {
+    sitekey: TURNSTILE_SITE_KEY,
+    callback: function (token) {
+      turnstileToken = token;
+    },
+    "expired-callback": function () {
+      turnstileToken = null;
+    },
+  });
+}
+
+function resetTurnstile() {
+  turnstileToken = null;
+  if (turnstileWidgetId !== null && window.turnstile) {
+    turnstile.reset(turnstileWidgetId);
+  }
+}
+
 async function signUp(email, password) {
-  const { data, error } = await supabaseClient.auth.signUp({ email, password });
+  if (!isPasswordStrong(password)) {
+    setStatus("auth-status", t("status_password_weak"), true);
+    return;
+  }
+  if (!turnstileToken) {
+    setStatus("auth-status", t("status_captcha_required"), true);
+    return;
+  }
+  const { data, error } = await supabaseClient.auth.signUp({
+    email,
+    password,
+    options: { captchaToken: turnstileToken },
+  });
+  resetTurnstile();
   if (error) {
     setStatus("auth-status", t("status_signup_error") + error.message, true);
     return;
@@ -38,7 +84,16 @@ async function signUp(email, password) {
 }
 
 async function signIn(email, password) {
-  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+  if (!turnstileToken) {
+    setStatus("auth-status", t("status_captcha_required"), true);
+    return;
+  }
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
+    email,
+    password,
+    options: { captchaToken: turnstileToken },
+  });
+  resetTurnstile();
   if (error) {
     setStatus("auth-status", t("status_signin_error") + error.message, true);
     return;
@@ -349,6 +404,8 @@ function subscribeToChatRealtime() {
 // ---------- Arranque ----------
 
 document.addEventListener("DOMContentLoaded", async () => {
+  if (window.turnstileReady) renderTurnstileWidget();
+
   document.getElementById("btn-signup").addEventListener("click", () => {
     signUp(document.getElementById("auth-email").value, document.getElementById("auth-password").value);
   });
@@ -376,9 +433,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     openInbox();
   });
   document.getElementById("btn-send-message").addEventListener("click", sendMessage);
-  document.getElementById("chat-input").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") sendMessage();
-  });
 
   // Verifica se j\u00e1 existe sess\u00e3o ativa (ex: ap\u00f3s refresh da p\u00e1gina)
   try {
