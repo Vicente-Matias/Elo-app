@@ -25,6 +25,13 @@
     var text = (reason && reason.message) ? reason.message : JSON.stringify(reason);
     showErrorBanner("ERRO ASS&Iacute;NCRONO: " + text);
   });
+  // Turnstile (CAPTCHA): avisa quando o script terminar de carregar,
+  // para o app.js poder desenhar o widget assim que a chave estiver pronta.
+  window.turnstileReady = false;
+  window.onTurnstileLoad = function () {
+    window.turnstileReady = true;
+    if (typeof renderTurnstileWidget === "function") renderTurnstileWidget();
+  };
 </script>
 </head>
 <body>
@@ -61,6 +68,8 @@
 
     <button id="btn-signin" class="primary" data-i18n="auth_signin"></button>
     <button id="btn-signup" class="secondary" data-i18n="auth_signup"></button>
+
+    <div id="turnstile-widget" class="cf-turnstile" style="margin-top:1rem;"></div>
 
     <p id="auth-status" class="status"></p>
   </section>
@@ -117,6 +126,7 @@
 
 </main>
 
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad&render=explicit" async defer onerror="showErrorBanner('FALHA AO CARREGAR: Cloudflare Turnstile nao foi encontrado ou esta bloqueado pela rede.')"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="showErrorBanner('FALHA AO CARREGAR: biblioteca do Supabase (supabase-js) n&atilde;o foi encontrada ou est&aacute; bloqueada pela rede.')"></script>
 <script src="config.js" onerror="showErrorBanner('FALHA AO CARREGAR: config.js n&atilde;o foi encontrado no reposit&oacute;rio &mdash; verifica se o nome do ficheiro est&aacute; exatamente correto.')"></script>
 <script src="i18n.js" onerror="showErrorBanner('FALHA AO CARREGAR: i18n.js n&atilde;o foi encontrado no reposit&oacute;rio.')"></script>
